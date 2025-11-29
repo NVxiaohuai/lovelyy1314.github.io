@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>人生已完成清单</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#ff7a9c',
+            secondary: '#7abfff',
+            lightgray: '#f0f0f0',
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      }
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .tag-transition {
+        transition: transform 0.15s ease;
+      }
+      .tag-active {
+        font-weight: 500;
+      }
+      .content-auto {
+        content-visibility: auto;
+      }
+    }
+  </style>
+  <style>
+    body {
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+    
+    .tag {
+      font-size: clamp(8px, 10px, 1vw);
+      margin: 2px 4px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      display: inline-block;
+      white-space: nowrap;
+      background-color: #f0f0f0;
+      color: #333;
+    }
+    
+    .tag.pink {
+      background-color: #ff7a9c2a;
+      color: #d32f2f;
+      font-weight: 500;
+    }
+    
+    .tag.blue {
+      background-color: #7abfff2a;
+      color: #1976d2;
+      font-weight: 500;
+    }
+    
+    .tag:active {
+      transform: scale(0.95);
+    }
+    
+    .tag:hover {
+      transform: scale(1.05);
+    }
+    
+    .stats {
+      font-size: 11px;
+      font-weight: bold;
+    }
+    
+    .copyright {
+      font-size: 10px;
+      color: #666;
+    }
+    
+    .timer {
+      font-size: 9px;
+      color: #888;
+    }
+  </style>
+</head>
+<body class="bg-white min-h-screen">
+  <!-- 背景图容器 (可替换背景) -->
+<div class="fixed inset-0 z-0 opacity-10">
+  <img src="E:\OneDrive\个人\林泳怡.jpeg" alt="背景图" class="w-full h-full object-cover">
+</div>
+
+  <div class="container mx-auto px-4 py-3 relative z-10 max-w-3xl">
+ 
+   <!-- 标题区域 -->
+<div class="text-center mb-3">
+  <h1 class="text-[14px] font-bold mb-1">人生已完成清单</h1>
+  <!-- 添加作者的话栏框 -->
+  <div class="bg-gray-100 rounded-lg p-3 mt-2 text-sm text-gray-700">
+    作者的话：<span id="quoteText">林泳怡，我喜欢你</span>
+  </div>
+  <div class="flex justify-center items-center gap-3 stats mt-2">
+    <span>已完成: <span id="completedCount">0</span>/<span id="totalCount">0</span></span>
+    <button id="clearAll" class="text-secondary hover:underline">清空已选</button>
+  </div>
+</div>
+
+    <!-- 标签容器 -->
+    <div id="tagContainer" class="flex flex-wrap justify-center mb-4 gap-[2px]">
+      <!-- 标签将通过JS动态生成 -->
+    </div>
+
+    <!-- 底部信息 -->
+    <div class="text-center mt-2">
+      <div class="copyright" id="copyright"></div>
+      <div class="timer mt-1">
+        已运行: <span id="runningTime">00:00:00</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 标签数据
+    const tags = [
+      "送礼物", "被送礼物", "暗恋", "明恋", "失恋", "表白", "被表白",
+      "留长发", "剪短发", "染发", "烫发", "化妆", "做美甲", "有过遗憾",
+      "放下一个人", "爱而不得", "双向奔赴", "拒绝他人表白", "犯过傻",
+      "表白被拒", "被渣", "装糊涂", "打架", "迟到", "旷课", "上课睡觉",
+      "被叫家长", "喝酒", "纹身", "去清吧", "和朋友去KTV", "吵架",
+      "绝交", "晚上一个人哭", "捐血", "住院", "会做饭", "做一桌菜",
+      "做饭给家人", "有超过10年的好朋友", "给自己买礼物", "买花",
+      "被送花", "通宵补作业", "一个人散步", "夜跑", "一个人看电影",
+      "一个人出去吃饭", "一个人过生日", "一个人去图书馆", "社死过",
+      "一个人看病", "一个人在外难过", "给自己写信", "跟朋友旅游",
+      "拥有要好的异性朋友", "谈恋爱", "考试不及格", "考试第一名",
+      "当班干部", "登台演出", "演讲", "野性消费", "被老师点名表扬",
+      "被老师点名批评", "被背叛", "被坚定选择", "获奖", "学一种语言",
+      "写日记", "拍写真", "自己一个人在外面住过", "看鬼片", "去密室",
+      "会一种乐器", "参加志愿活动", "去游乐场", "去看现场演唱会",
+      "兼职", "打工", "看画展", "捐款", "道歉", "释怀", "失望", "淋雨",
+      "长途旅行", "露营", "熬夜", "早起", "学会游泳", "骑自行车",
+      "开车", "坐飞机", "看日出", "看日落", "养宠物", "种植物",
+      "爬过山", "看过海", "学会一首歌", "发表文章", "获奖学金",
+      "参加比赛", "组织活动", "救过人", "被救过", "说走就走的旅行",
+      "保持一年以上的习惯", "学会拒绝", "原谅别人", "被原谅",
+      "大声说爱", "勇敢说不", "尝试新事物", "克服恐惧", "实现梦想",
+      "帮助陌生人", "被陌生人帮助", "学会一项技能", "教别人东西",
+      "参加婚礼", "参加葬礼", "第一次工作", "第一次领工资"
+    ];
+
+    // 初始化变量
+    const tagContainer = document.getElementById('tagContainer');
+    const completedCountEl = document.getElementById('completedCount');
+    const totalCountEl = document.getElementById('totalCount');
+    const clearAllBtn = document.getElementById('clearAll');
+    const copyrightEl = document.getElementById('copyright');
+    const runningTimeEl = document.getElementById('runningTime');
+    
+    let completedCount = 0;
+    const startTime = new Date(2025, 10, 29, 19, 30, 0); // 2025.11.29晚19:30
+
+    // 设置版权信息
+    const currentYear = new Date().getFullYear();
+    if (currentYear === 2025) {
+      copyrightEl.textContent = '©晓怀 2025';
+    } else {
+      copyrightEl.textContent = `晓怀 2025~${currentYear}`;
+    }
+
+    // 更新运行时间
+    function updateRunningTime() {
+      const now = new Date();
+      const diff = now - startTime;
+      
+      const seconds = Math.floor((diff / 1000) % 60).toString().padStart(2, '0');
+      const minutes = Math.floor((diff / (1000 * 60)) % 60).toString().padStart(2, '0');
+      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24).toString().padStart(2, '0');
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      
+      runningTimeEl.textContent = days > 0 
+        ? `${days}天 ${hours}:${minutes}:${seconds}`
+        : `${hours}:${minutes}:${seconds}`;
+    }
+    
+    // 每秒更新一次时间
+    setInterval(updateRunningTime, 1000);
+    updateRunningTime(); // 初始化
+
+    // 创建标签
+    function createTags() {
+      tags.forEach(text => {
+        const tag = document.createElement('div');
+        tag.className = 'tag tag-transition';
+        tag.textContent = text;
+        tag.dataset.active = 'false';
+        
+        // 点击事件
+        tag.addEventListener('click', () => {
+          const isActive = tag.dataset.active === 'true';
+          
+          if (isActive) {
+            // 取消选中
+            tag.classList.remove('pink', 'blue');
+            tag.dataset.active = 'false';
+            completedCount--;
+          } else {
+            // 选中，随机粉色或蓝色
+            const isPink = Math.random() > 0.5;
+            tag.classList.add(isPink ? 'pink' : 'blue');
+            tag.dataset.active = 'true';
+            completedCount++;
+          }
+          
+          // 更新计数
+          completedCountEl.textContent = completedCount;
+        });
+        
+        tagContainer.appendChild(tag);
+      });
+      
+      // 设置总数
+      totalCountEl.textContent = tags.length;
+    }
+
+ // 清空所有选中
+clearAllBtn.addEventListener('click', () => {
+  const activeTags = document.querySelectorAll('.tag[data-active="true"]');
+  activeTags.forEach(tag => {
+    tag.classList.remove('pink', 'blue');
+    tag.dataset.active = 'false';
+  });
+  
+  completedCount = 0;
+  completedCountEl.textContent = completedCount;
+});
+
+    // 初始化
+    createTags();
+  </script>
+</body>
+</html>
